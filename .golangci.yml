@@ -1,0 +1,72 @@
+linters-settings:
+  staticcheck:
+    checks: [all]
+  stylecheck:
+    checks: [all]
+  errcheck:
+    check-type-assertions: true
+  exhaustive:
+    check-generated: true
+    default-case-required: true
+    default-signifies-exhaustive: true
+    explicit-exhaustive-map: true
+    explicit-exhaustive-switch: true
+    package-scope-only: true
+  godot:
+    capital: true
+  gosimple:
+    go: "1.22"
+  makezero:
+    always: true
+
+linters:
+  enable:
+    - asciicheck
+    - containedctx
+    - decorder
+    - depguard
+    - dogsled
+    - dupl
+    - errcheck # default
+    - errname
+    - errorlint
+    - exhaustive
+    - exhaustruct
+    - exportloopref
+    - forcetypeassert
+    - gci
+    - godot
+    - goerr113
+    - goimports
+    - gomnd
+    - goprintffuncname
+    - gosec
+    - gosimple # default
+    - govet # default
+    - ifshort
+    - ineffassign # default
+    - ireturn
+    - makezero
+    - misspell
+    - nakedret
+    - nilerr
+    - nilnil
+    - nlreturn
+    - nolintlint
+    - notx
+    - prealloc
+    - predeclared
+    - reassign
+    - staticcheck # default
+    - stylecheck
+    - tagliatelle
+    - tenv
+    - tparallel
+    - typecheck # default
+    - unconvert
+    - unparam
+    - unused # default
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wrapcheck
