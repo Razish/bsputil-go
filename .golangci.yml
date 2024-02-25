@@ -1,9 +1,4 @@
 linters-settings:
-  # depguard:
-  #   rules:
-  #     allowInternal:
-  #       allow:
-  #         - "*"
   errcheck:
     check-type-assertions: true
   exhaustive:
