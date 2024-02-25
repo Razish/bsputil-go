@@ -1,19 +1,23 @@
 package main
 
 import (
-	"bsputil/parse"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+
+	"bsputil/parse"
 )
+
+var ErrUsage = errors.New("usage error")
 
 func main() {
 	args := os.Args[1:]
 	if len(args) != 2 {
 		prog := os.Args[0]
-		log.Fatal(fmt.Errorf("usage: %s <filename> <lump name>", prog))
+		log.Fatal(fmt.Errorf("%w: %s <filename> <lump name>", ErrUsage, prog))
 	}
 
 	enc := json.NewEncoder(os.Stdout)
@@ -28,13 +32,13 @@ func main() {
 func readBSP(filename string, lump string, enc *json.Encoder) error {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return fmt.Errorf("unable to read BSP: %v", err)
+		return fmt.Errorf("unable to read BSP: %w", err)
 	}
 
 	r := bytes.NewReader(data)
 	header, err := parse.ReadHeader(r)
 	if err != nil {
-		return fmt.Errorf("unable to parse BSP header: %v", err)
+		return fmt.Errorf("unable to parse BSP header: %w", err)
 	}
 
 	// each lump should only emit JSON-L for external consumption
@@ -42,16 +46,23 @@ func readBSP(filename string, lump string, enc *json.Encoder) error {
 	case "ents", "entities":
 		entities, err := parse.ReadEntityLump(r, header)
 		if err != nil {
-			return fmt.Errorf("unable to parse entity lump: %v", err)
+			return fmt.Errorf("unable to parse entity lump: %w", err)
 		}
-		entities.Write(enc)
+		if err := entities.Write(enc); err != nil {
+			return fmt.Errorf("unable to encode entities: %w", err)
+		}
 
 	case "shaders":
 		shaders, err := parse.ReadShadersLump(r, header)
 		if err != nil {
-			return fmt.Errorf("unable to parse shaders lump: %v", err)
+			return fmt.Errorf("unable to parse shaders lump: %w", err)
 		}
-		shaders.Write(enc)
+		if err := shaders.Write(enc); err != nil {
+			return fmt.Errorf("unable to encode shaders: %w", err)
+		}
+
+	default:
+		return fmt.Errorf("%w: unknown lump %s", ErrUsage, lump)
 	}
 
 	return nil

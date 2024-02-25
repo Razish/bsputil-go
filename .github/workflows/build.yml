@@ -1,0 +1,46 @@
+name: Go
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.54
+
+      - name: Test
+        run: go test -v ./...
+
+      - name: Build
+        # run: go build -v ./...
+        uses: thatisuday/go-cross-build@v1.0.2
+        with:
+          platforms: "linux/amd64, darwin/amd64, darwin/arm64, windows/amd64"
+          name: "bsputil"
+          compress: "true"
+          dest: "dist"
+
+      - name: Upload
+        uses: skx/github-action-publish-binaries@release-2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: "./dist/*.tar.gz"

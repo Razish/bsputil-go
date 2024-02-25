@@ -1,14 +1,16 @@
 package parse
 
 import (
-	"bsputil/util"
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
 	"text/scanner"
+
+	"bsputil/util"
 )
 
 type EntitiesString string
@@ -17,8 +19,11 @@ type Entities []Entity
 
 func (entities Entities) Write(enc *json.Encoder) error {
 	for _, entity := range entities {
-		enc.Encode(entity)
+		if err := enc.Encode(entity); err != nil {
+			return fmt.Errorf("couldn't encode entity: %w", err)
+		}
 	}
+
 	return nil
 }
 
@@ -26,17 +31,24 @@ type EntityScanner struct {
 	scanner.Scanner
 }
 
-// token is the entire `"quoted string"`
+var ErrEntityParse = errors.New("entity parse error")
+
+func EntityParseError(detail string) error {
+	return fmt.Errorf("%w: %s", ErrEntityParse, detail)
+}
+
+// token is the entire `"quoted string"`.
 func (es *EntityScanner) ReadQuotedString(token rune) (string, error) {
 	if token == scanner.EOF {
-		return "", fmt.Errorf("unexpected EOF parsing quoted string")
+		return "", EntityParseError("unexpected EOF parsing quoted string")
 	}
 
 	// return the inside portion of the `"quoted string"`
 	text := es.TokenText()
-	if text[len(text)-1:] != "\"" {
-		return "", fmt.Errorf("quoted string did not end in a quote")
+	if !strings.HasSuffix(text, "\"") {
+		return "", fmt.Errorf("%w: quoted string did not end in a quote: %s", ErrEntityParse, text)
 	}
+
 	return text[1 : len(text)-1], nil
 }
 
@@ -57,23 +69,24 @@ func (entitiesString EntitiesString) Parse() (*Entities, error) {
 	//     "key2" "value"
 	//   }
 	for token := es.Scan(); token != scanner.EOF; token = es.Scan() {
+		// we're parsing an array of entity defs between braces: "{" ... "}" until EOF
 		text := es.TokenText()
 		if text != "{" {
-			return nil, fmt.Errorf("unexpected token \"%s\" reading entity, expected \"{\"", text)
+			return nil, fmt.Errorf("%w: unexpected token \"%s\" reading entity, expected \"{\"", ErrEntityParse, text)
 		}
 
 		entity := Entity{}
 
-		// we are parsing an entity
 		for token = es.Scan(); token != scanner.EOF; token = es.Scan() {
+			// we're parsing k,v pairs of entity properties until the next "}"
 			text = es.TokenText()
 
 			if text == "}" {
 				entities = append(entities, entity)
+
 				break
 			}
 
-			// we're parsing k,v pairs of entity properties until the next "}"
 			key, err := es.ReadQuotedString(token)
 			if err != nil {
 				return nil, fmt.Errorf("couldn't parse entity key: %w", err)
@@ -93,14 +106,19 @@ func (entitiesString EntitiesString) Parse() (*Entities, error) {
 }
 
 func loadEntitiesString(r *bytes.Reader, lump *Lump) (*Entities, error) {
-	r.Seek(int64(lump.FileOffset), io.SeekStart)
-	data := make([]byte, lump.FileLength)
-	binary.Read(r, binary.LittleEndian, data)
+	if _, err := r.Seek(int64(lump.FileOffset), io.SeekStart); err != nil {
+		return nil, fmt.Errorf("unable to locate entities lump: %w", err)
+	}
+	data := make([]byte, lump.FileLength) // nozero: we are reading directly into the prealloced slice
+	if err := binary.Read(r, binary.LittleEndian, data); err != nil {
+		return nil, fmt.Errorf("unable to read data from entities lump: %w", err)
+	}
 
 	entitiesString := EntitiesString(util.CToGoString(data[:]))
+
 	return entitiesString.Parse()
 }
 
 func ReadEntityLump(r *bytes.Reader, header *Header) (*Entities, error) {
-	return loadEntitiesString(r, &header.Lumps[LUMP_ENTITIES])
+	return loadEntitiesString(r, &header.Lumps[LumpEntities])
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func Int32AsString(i int32) string {
-	bytes := make([]byte, 4)
+	bytes := make([]byte, 4) // nozero: we know exactly what we're doing here, thanks
 	bytes[0] = (byte)(i & 0xff)
 	bytes[1] = (byte)((i >> 8) & 0xff)
 	bytes[2] = (byte)((i >> 16) & 0xff)
@@ -20,5 +20,6 @@ func CToGoString(b []byte) string {
 	if i < 0 {
 		i = len(b)
 	}
+
 	return string(b[:i])
 }
