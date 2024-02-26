@@ -1,8 +1,4 @@
 linters-settings:
-  staticcheck:
-    checks: [all]
-  stylecheck:
-    checks: [all]
   errcheck:
     check-type-assertions: true
   exhaustive:
@@ -18,13 +14,16 @@ linters-settings:
     go: "1.22"
   makezero:
     always: true
+  staticcheck:
+    checks: [all]
+  stylecheck:
+    checks: [all]
 
 linters:
   enable:
     - asciicheck
     - containedctx
     - decorder
-    - depguard
     - dogsled
     - dupl
     - errcheck # default
@@ -38,12 +37,10 @@ linters:
     - godot
     - goerr113
     - goimports
-    - gomnd
     - goprintffuncname
     - gosec
     - gosimple # default
     - govet # default
-    - ifshort
     - ineffassign # default
     - ireturn
     - makezero
@@ -52,8 +49,8 @@ linters:
     - nilerr
     - nilnil
     - nlreturn
+    - noctx
     - nolintlint
-    - notx
     - prealloc
     - predeclared
     - reassign
