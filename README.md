@@ -2,6 +2,8 @@
 
 just a toy project to parse lumps from an RBSP file and emit linewise-JSON of lump objects.
 
+![Go](https://github.com/Razish/bsputil/actions/workflows/build.yml/badge.svg)
+
 ## Supported games/formats
 
 - RBSP version 1 (Jedi Academy, Jedi Outcast)
