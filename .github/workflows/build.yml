@@ -10,7 +10,7 @@ on:
     types: [published]
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -29,10 +29,6 @@ jobs:
       - name: Test
         run: go test -v ./...
 
-  build:
-    runs-on: ubuntu-latest
-    needs: [test]
-    steps:
       - name: Build
         # run: go build -v ./...
         uses: thatisuday/go-cross-build@v1.0.2
