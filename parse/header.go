@@ -1,10 +1,10 @@
 package parse
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 
 	"bsputil/util"
 )
@@ -55,7 +55,7 @@ type Lump struct {
 
 var ErrHeaderParse = errors.New("header parse error")
 
-func ReadHeader(r *bytes.Reader) (*Header, error) {
+func ReadHeader(r io.Reader) (*Header, error) {
 	var header Header
 
 	if err := binary.Read(r, binary.LittleEndian, &header); err != nil {
